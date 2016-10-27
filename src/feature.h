@@ -140,10 +140,6 @@
 /* #define MOD4_TAB_MAKES_META */
 
 /*--------------------------------MOUSE---------------------------------*/
-/*
- * Disable sending escape sequences (up, down, page up/down)
- * from the scrollbar when XTerm mouse reporting is enabled
- */
 /* #define NO_SCROLLBAR_REPORT */
 
 /*
@@ -161,12 +157,6 @@
  * this long after the last mouse click [default: 50 milliseconds]
  */
 #define MOUSE_THRESHOLD		50
-
-/*
- * Set delay periods for continuous scrolling with scrollbar buttons
- */
-/* #define SCROLLBAR_INITIAL_DELAY 0.33 */
-/* #define SCROLLBAR_CONTINUOUS_DELAY 0.05 */
 
 /*
  * The speed of selection scrolling is proportional to the distance
@@ -203,35 +193,6 @@
  * Have mapAlert behaviour selectable with mapAlert resource
  */
 #define MAPALERT_OPTION
-
-/*-----------------------------SCROLL BAR-------------------------------*/
-/*
- * Choose the rxvt style scrollbar width
- * - should be an even number [default: 10]
- */
-/* #define SB_WIDTH_RXVT 10 */
-
-/*
- * Minimum and maximum widths of the scrollbar (all styles)
- */
-#define SB_WIDTH_MINIMUM 	5
-#define SB_WIDTH_MAXIMUM 	100
-
-/*
- * rxvt scrollbar shadow width in pixels, must be 1 or 2
- */
-#define SHADOW_WIDTH 1
-
-/*
- * clicking above or below the scrollbar slider (all styles minus
- * xterm) will scroll by (height - 1) rather than (height / 4).
- */
-#define RXVT_SCROLL_FULL 1
-
-/*
- * (Hops) draw an internal border line on inside edge of the rxvt scrollbar
- */
-/* #define SB_BORDER */
 
 /*---------------------------MULTILINGUAL-------------------------------*/
 /*

@@ -1,26 +1,10 @@
-/* enable mremap on GNU/Linux */
-#ifdef __linux__
-# define _GNU_SOURCE
-#endif
-
-/* enable the POSIX prototypes of mmap/munmap on Solaris */
-#ifdef __sun
-# if __STDC_VERSION__ >= 199901L
-#  define _XOPEN_SOURCE 600
-# else
-#  define _XOPEN_SOURCE 500
-# endif
-#endif
-
 #include "emman.h"
 
 #include <ecb.h>
 
 #include <string.h>
 
-#ifndef _WIN32
-# include <unistd.h>
-#endif
+#include <unistd.h>
 
 #if _POSIX_MAPPED_FILES > 0
 # define USE_MMAP 1
@@ -103,34 +87,6 @@ chunk_alloc (size_t size, int populate)
     return ptr;
   #else
     return malloc (size);
-  #endif
-}
-
-void *
-chunk_realloc (void *ptr, size_t old_size, size_t new_size)
-{
-  #if USE_MMAP
-    #ifdef MREMAP_MAYMOVE /* requires _GNU_SOURCE */
-      void *ptr2 = mremap (ptr, old_size, new_size, MREMAP_MAYMOVE);
-
-      if (ptr2 == MAP_FAILED)
-        return 0;
-
-      return ptr2;
-    #else
-      void *ptr2 = chunk_alloc (new_size, 0);
-
-      if (!ptr2)
-        return ptr2;
-
-      /* TODO: prepopulate old_size pages instead of faulting them in */
-
-      memcpy (ptr2, ptr, old_size);
-      munmap (ptr, old_size);
-      return ptr2;
-    #endif
-  #else
-    return realloc (ptr, new_size);
   #endif
 }
 

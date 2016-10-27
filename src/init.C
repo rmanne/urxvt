@@ -555,7 +555,6 @@ rxvt_term::init_vars ()
 
   oldcursor.row = oldcursor.col = -1;
 
-  set_option (Opt_scrollBar);
   set_option (Opt_scrollTtyOutput);
   set_option (Opt_jumpScroll);
   set_option (Opt_skipScroll);
@@ -674,10 +673,6 @@ rxvt_term::init_resources (int argc, const char *const *argv)
 
   cursor_type = option (Opt_cursorUnderline) ? 1 : 0;
 
-  /* no point having a scrollbar without having any scrollback! */
-  if (!saveLines)
-    set_option (Opt_scrollBar, 0);
-
   if (!rs[Rs_cutchars])
     rs[Rs_cutchars] = CUTCHARS;
 
@@ -698,8 +693,6 @@ rxvt_term::init_resources (int argc, const char *const *argv)
     rs[Rs_delete_key] = "\033[3~";
 # endif
 #endif
-
-    scrollBar.setup (this);
 
 #ifdef XTERM_REVERSE_VIDEO
   /* this is how xterm implements reverseVideo */
@@ -806,9 +799,6 @@ rxvt_term::init2 (int argc, const char *const *argv)
           rxvt_fatal ("unable to change into specified shell working directory, aborting.\n");
       }
 
-  if (option (Opt_scrollBar))
-    scrollBar.state = SB_STATE_IDLE;    /* set existence for size calculations */
-
   pty = ptytty::create ();
 
   create_windows (argc, argv);
@@ -819,13 +809,6 @@ rxvt_term::init2 (int argc, const char *const *argv)
 
 #if 0
   XSynchronize (dpy, True);
-#endif
-
-  if (option (Opt_scrollBar))
-    scrollBar.resize ();      /* create and map scrollbar */
-
-#ifdef HAVE_BG_PIXMAP
-  bg_init ();
 #endif
 
 #if ENABLE_PERL
@@ -1051,13 +1034,6 @@ rxvt_term::init_command (const char *const *argv)
     priv_modes |= PrivMode_HaveBackSpace;
 #endif
 
-  /* add value for scrollBar */
-  if (scrollBar.state)
-    {
-      priv_modes |= PrivMode_scrollBar;
-      SavedModes |= PrivMode_scrollBar;
-    }
-
   run_command (argv);
 }
 
@@ -1074,29 +1050,6 @@ rxvt_term::get_colors ()
   for (i = 0; i < NRS_COLORS; i++)
     if (const char *name = rs[Rs_color + i])
       set_color (pix_colors [i], name);
-
-  /*
-   * get scrollBar shadow colors
-   *
-   * The calculations of topShadow/bottomShadow values are adapted
-   * from the fvwm window manager.
-   */
-#ifdef RXVT_SCROLLBAR
-  pix_colors [Color_scroll].fade (this, 50, pix_colors [Color_bottomShadow]);
-
-  rgba cscroll;
-  pix_colors [Color_scroll].get (cscroll);
-
-  /* topShadowColor */
-  if (!pix_colors[Color_topShadow].set (this,
-                   rgba (
-                     min ((int)rgba::MAX_CC, max (cscroll.r / 5, cscroll.r) * 7 / 5),
-                     min ((int)rgba::MAX_CC, max (cscroll.g / 5, cscroll.g) * 7 / 5),
-                     min ((int)rgba::MAX_CC, max (cscroll.b / 5, cscroll.b) * 7 / 5),
-                     cscroll.a)
-                   ))
-    alias_color (Color_topShadow, Color_White);
-#endif
 
 #ifdef OFF_FOCUS_FADING
   for (i = 0; i < NRS_COLORS; i++)

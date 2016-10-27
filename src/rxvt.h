@@ -76,27 +76,11 @@ typedef  int32_t tlen_t_; // specifically for use in the line_t structure
 # include <gdk-pixbuf/gdk-pixbuf.h>
 #endif
 
-#if XRENDER && (HAVE_PIXBUF || ENABLE_TRANSPARENCY)
-# define HAVE_BG_PIXMAP 1
-# define HAVE_IMG 1
-#endif
-
-#if HAVE_BG_PIXMAP
-# if HAVE_PIXBUF
-#  define BG_IMAGE_FROM_FILE 1
-# endif
-# if ENABLE_TRANSPARENCY
-#  define BG_IMAGE_FROM_ROOT 1
-# endif
-#endif
-
 #include <ecb.h>
 #include "encoding.h"
 #include "rxvtutil.h"
 #include "rxvtfont.h"
 #include "rxvttoolkit.h"
-#include "rxvtimg.h"
-#include "scrollbar.h"
 #include "ev_cpp.h"
 #include "libptytty.h"
 
@@ -214,85 +198,6 @@ struct localise_env
   }
 };
 
-#ifdef HAVE_BG_PIXMAP
-struct image_effects
-{
-  bool tint_set;
-  rxvt_color tint;
-  int shade;
-  int h_blurRadius, v_blurRadius;
-
-  image_effects ()
-  {
-    tint_set     =
-    h_blurRadius =
-    v_blurRadius = 0;
-    shade = 100;
-  }
-
-  bool need_tint ()
-  {
-    return shade != 100 || tint_set;
-  }
-
-  bool need_blur ()
-  {
-    return h_blurRadius && v_blurRadius;
-  }
-
-  bool set_tint (const rxvt_color &new_tint);
-  bool set_shade (const char *shade_str);
-  bool set_blur (const char *geom);
-};
-
-# if BG_IMAGE_FROM_FILE
-enum {
-  IM_IS_SIZE_SENSITIVE = 1 << 1,
-  IM_KEEP_ASPECT       = 1 << 2,
-  IM_ROOT_ALIGN        = 1 << 3,
-  IM_TILE              = 1 << 4,
-  IM_GEOMETRY_FLAGS    = IM_KEEP_ASPECT | IM_ROOT_ALIGN | IM_TILE,
-};
-
-enum {
-  noScale = 0,
-  windowScale = 100,
-  defaultScale = windowScale,
-  centerAlign = 50,
-  defaultAlign = centerAlign,
-};
-
-struct rxvt_image : image_effects
-{
-  unsigned short alpha;
-  uint8_t flags;
-  unsigned int h_scale, v_scale; /* percents of the window size */
-  int h_align, v_align;          /* percents of the window size:
-                                    0 - left align, 50 - center, 100 - right */
-
-  bool is_size_sensitive ()
-  {
-    return (!(flags & IM_TILE)
-            || h_scale || v_scale
-            || (!(flags & IM_ROOT_ALIGN) && (h_align || v_align)));
-  }
-
-  rxvt_img *img;
-
-  void destroy ()
-  {
-    delete img;
-    img = 0;
-  }
-
-  rxvt_image ();
-  void set_file_geometry (rxvt_screen *s, const char *file);
-  void set_file (rxvt_screen *s, const char *file);
-  bool set_geometry (const char *geom, bool update = false);
-};
-# endif
-#endif
-
 /*
  *****************************************************************************
  * STRUCTURES AND TYPEDEFS
@@ -360,8 +265,6 @@ struct mouse_event
 #if defined (NO_MOUSE_REPORT) && !defined (NO_MOUSE_REPORT_SCROLLBAR)
 # define NO_MOUSE_REPORT_SCROLLBAR 1
 #endif
-
-#define scrollBar_esc           30
 
 #if !defined (RXVT_SCROLLBAR) && !defined (NEXT_SCROLLBAR)
 # define NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING 1
@@ -633,7 +536,6 @@ enum {
 #define PrivMode_VisibleCursor  (1UL<<11)
 #define PrivMode_MouseX10       (1UL<<12)
 #define PrivMode_MouseX11       (1UL<<13)
-#define PrivMode_scrollBar      (1UL<<14)
 #define PrivMode_TtyOutputInh   (1UL<<15)
 #define PrivMode_Keypress       (1UL<<16)
 #define PrivMode_smoothScroll   (1UL<<17)
@@ -1057,7 +959,6 @@ enum {
 
 struct rxvt_vars : TermWin_t
 {
-  scrollBar_t     scrollBar;
   uint8_t         options[(Opt_count + 7) >> 3];
   XSizeHints      szHint;
   rxvt_color     *pix_colors;
@@ -1170,42 +1071,6 @@ struct rxvt_term : zero_initialized, rxvt_vars, rxvt_screen
   static struct termios def_tio;
   row_col_t       oldcursor;
 
-#ifdef HAVE_BG_PIXMAP
-  void bg_init ();
-  void bg_destroy ();
-
-# if BG_IMAGE_FROM_FILE
-  rxvt_image fimage;
-  void render_image (rxvt_image &image);
-# endif
-
-# if BG_IMAGE_FROM_ROOT
-  rxvt_img *root_img;
-  image_effects root_effects;
-
-  void render_root_image ();
-# endif
-
-  ev_tstamp bg_valid_since;
-
-  bool bg_window_size_sensitive ();
-  bool bg_window_position_sensitive ();
-
-  void bg_render ();
-#endif
-
-#ifdef HAVE_IMG
-  enum {
-    BG_IS_TRANSPARENT    = 1 << 1,
-    BG_NEEDS_REFRESH     = 1 << 2,
-    BG_INHIBIT_RENDER    = 1 << 3,
-  };
-
-  uint8_t bg_flags;
-
-  rxvt_img *bg_img;
-#endif
-
 #if ENABLE_OVERLAY
   overlay_base ov;
 
@@ -1272,16 +1137,10 @@ struct rxvt_term : zero_initialized, rxvt_vars, rxvt_screen
   void rootwin_cb (XEvent &xev);
   xevent_watcher rootwin_ev;
 #endif
-#ifdef HAVE_BG_PIXMAP
-  void update_background ();
-  void update_background_cb (ev::timer &w, int revents);
-  ev::timer update_background_ev;
-#endif
 
   void x_cb (XEvent &xev);
   xevent_watcher termwin_ev;
   xevent_watcher vt_ev;
-  xevent_watcher scrollbar_ev;
 
   void child_cb (ev::child &w, int revents); ev::child child_ev;
   void destroy_cb (ev::idle &w, int revents); ev::idle destroy_ev;
@@ -1304,9 +1163,7 @@ struct rxvt_term : zero_initialized, rxvt_vars, rxvt_screen
   void bell_cb (ev::timer &w, int revents); ev::timer bell_ev;
 #endif
 
-#ifndef NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING
-  void cont_scroll_cb (ev::timer &w, int revents); ev::timer cont_scroll_ev;
-#endif
+#define NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING
 #ifdef SELECTION_SCROLLING
   void sel_scroll_cb (ev::timer &w, int revents); ev::timer sel_scroll_ev;
 #endif

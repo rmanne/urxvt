@@ -106,11 +106,6 @@ optList[] = {
               BOOL (Rs_skipScroll, "skipScroll", "ss", Opt_skipScroll, 0, "skip scrolling"),
               BOOL (Rs_pastableTabs, "pastableTabs", "ptab", Opt_pastableTabs, 0, "tab characters are pastable"),
               RSTRG (Rs_scrollstyle, "scrollstyle", "mode"),
-              BOOL (Rs_scrollBar, "scrollBar", "sb", Opt_scrollBar, 0, "scrollbar"),
-              BOOL (Rs_scrollBar_right, "scrollBar_right", "sr", Opt_scrollBar_right, 0, "scrollbar right"),
-              BOOL (Rs_scrollBar_floating, "scrollBar_floating", "st", Opt_scrollBar_floating, 0, "scrollbar without a trough"),
-              RSTRG (Rs_scrollBar_align, "scrollBar_align", "mode"),
-              STRG (Rs_scrollBar_thickness, "thickness", "sbt", "number", "scrollbar thickness/width in pixels"),
               BOOL (Rs_scrollTtyOutput, "scrollTtyOutput", NULL, Opt_scrollTtyOutput, 0, NULL),
               BOOL (Rs_scrollTtyOutput, NULL, "si",  Opt_scrollTtyOutput, Optflag_Reverse, "scroll-on-tty-output inhibit"),
               BOOL (Rs_scrollTtyKeypress, "scrollTtyKeypress", "sk", Opt_scrollTtyKeypress, 0, "scroll-on-keypress"),
@@ -379,16 +374,6 @@ static const char optionsstring[] = "options: "
 #endif
 #if defined(NO_RESOURCES)
                                     "NoResources,"
-#endif
-                                    "scrollbars=plain"
-#if defined(RXVT_SCROLLBAR)
-                                    "+rxvt"
-#endif
-#if defined(NEXT_SCROLLBAR)
-                                    "+NeXT"
-#endif
-#if defined(XTERM_SCROLLBAR)
-                                    "+xterm"
 #endif
                                     "\nUsage: ";		/* Usage */
 

@@ -4,7 +4,6 @@ Time			T_UV
 Atom			T_UV
 Window			T_UV
 Pixmap			T_UV
-rxvt_img::nv		T_NV
 
 urxvt::pixbuf           T_PTROBJ
 
@@ -12,7 +11,6 @@ octet_string            OCTET_STRING
 utf8_string             UTF8_STRING
 
 rxvt_term *		TERM
-rxvt_img *		IMG
 
 GError **		T_UV
 

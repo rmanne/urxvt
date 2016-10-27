@@ -32,125 +32,15 @@
 # include <fontconfig/fontconfig.h>
 #endif
 
-#define MAX_OVERLAP_ROMAN  (8 + 2)	// max. character width in 8ths of the base width
-#define MAX_OVERLAP_ITALIC (8 + 3)	// max. overlap for italic fonts
-
-#define OVERLAP_OK(w,wcw,prop) ((w) <= (			\
-  (prop)->slant >= rxvt_fontprop::italic			\
-    ? ((prop)->width * (wcw) * MAX_OVERLAP_ITALIC + 7) >> 3	\
-    : ((prop)->width * (wcw) * MAX_OVERLAP_ROMAN  + 7) >> 3	\
-  ))
-
-static const struct rxvt_fallback_font {
-  codeset cs;
-  const char *name;
-} fallback_fonts[] = {
-  { CS_ISO8859_1,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-1"           },
-  { CS_ISO8859_15,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-15"          },
-  { CS_ISO8859_15,   "-*-*-*-r-*--*-*-*-*-c-*-fcd8859-15"          },
-
-#if ENCODING_EU
-  // cyrillic
-  { CS_KOI8_R,        "-*-*-*-r-*--*-*-*-*-c-*-koi8-r"             },
-  { CS_KOI8_U,        "-*-*-*-r-*--*-*-*-*-c-*-koi8-u"             },
-
-  { CS_ISO8859_2,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-2"           },
-  { CS_ISO8859_3,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-3"           },
-  { CS_ISO8859_4,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-4"           },
-  { CS_ISO8859_5,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-5"           },
-  { CS_ISO8859_6,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-6"           },
-  { CS_ISO8859_7,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-7"           },
-  { CS_ISO8859_8,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-8"           },
-  { CS_ISO8859_9,    "-*-*-*-r-*--*-*-*-*-c-*-iso8859-9"           },
-  { CS_ISO8859_10,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-10"          },
-  { CS_ISO8859_11,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-11"          },
-  { CS_ISO8859_13,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-13"          },
-  { CS_ISO8859_14,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-14"          },
-  { CS_ISO8859_16,   "-*-*-*-r-*--*-*-*-*-c-*-iso8859-16"          },
-
-# if XFT
-  { CS_KOI8_U,       "xft::lang=ru"                                },
-
-  { CS_ISO8859_5,    "xft::lang=ru"                                },
-  { CS_ISO8859_6,    "xft::lang=ar"                                },
-  { CS_ISO8859_7,    "xft::lang=el"                                },
-  { CS_ISO8859_8,    "xft::lang=he"                                },
-  { CS_ISO8859_9,    "xft::lang=tr"                                },
-  { CS_ISO8859_10,   "xft::lang=se"                                },
-  { CS_ISO8859_11,   "xft::lang=th"                                },
-# endif
-#endif
-
-  // japanese
-#if ENCODING_JP || ENCODING_JP_EXT
-# if XFT
-  // prefer xft for complex scripts
-  { CS_JIS0208_1990_0, "xft:Sazanami Mincho:antialias=false"       },
-  { CS_JIS0208_1990_0, "xft:Kochi Gothic:antialias=false"          },
-  { CS_JIS0208_1990_0, "xft:Mincho:antialias=false"                },
-  { CS_JIS0208_1990_0, "xft::lang=ja:antialias=false"              },
-# endif
-  { CS_JIS0201_1976_0, "-*-mincho-*-r-*--*-*-*-*-c-*-jisx0201*-0"  },
-  { CS_JIS0208_1990_0, "-*-mincho-*-r-*--*-*-*-*-c-*-jisx0208*-0"  },
-  { CS_JIS0212_1990_0, "-*-mincho-*-r-*--*-*-*-*-c-*-jisx0212*-0"  },
-  { CS_JIS0201_1976_0, "-*-*-*-r-*--*-*-*-*-c-*-jisx0201*-0"       },
-  { CS_JIS0208_1990_0, "-*-*-*-r-*--*-*-*-*-c-*-jisx0208*-0"       },
-  { CS_JIS0212_1990_0, "-*-*-*-r-*--*-*-*-*-c-*-jisx0212*-0"       },
-#endif
-
-#if ENCODING_ZH || ENCODING_ZH_EXT
-# if XFT
-  { CS_GBK_0,          "xft:AR PL KaitiM GB"                       },
-  { CS_GBK_0,          "xft:AR PL SungtiL GB"                      },
-  { CS_GBK_0,          "xft::lang=zh"                              },
-  { CS_BIG5_EXT,       "xft:AR PL Mingti2L Big5"                   },
-  { CS_BIG5_EXT,       "xft:AR PL KaitiM Big5"                     },
-  { CS_GB2312_1980_0,  "xft:AR PL KaitiM GB"                       },
-  { CS_GB2312_1980_0,  "xft:AR PL SungtiL GB"                      },
-  { CS_GB2312_1980_0,  "xft::lang=zh"                              },
-# endif
-  { CS_GBK_0,           "-*-*-*-*-*-*-*-*-*-*-c-*-gbk*-0"          },
-  { CS_BIG5,            "-*-*-*-*-*-*-*-*-*-*-c-*-big5-0"          },
-  { CS_BIG5_PLUS,       "-*-*-*-*-*-*-*-*-*-*-c-*-big5p-0"         },
-  { CS_BIG5_EXT,        "-*-*-*-*-*-*-*-*-*-*-c-*-big5.eten-0"     },
-  { CS_GB2312_1980_0,   "-*-*-*-*-*-*-*-*-*-*-c-*-gb2312*-0"       },
-  { CS_CNS11643_1992_1, "-*-*-*-*-*-*-*-*-*-*-c-*-gb2312*-0"       },
-  { CS_CNS11643_1992_1, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-1"     },
-  { CS_CNS11643_1992_2, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-2"     },
-  { CS_CNS11643_1992_3, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-3"     },
-  { CS_CNS11643_1992_4, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-4"     },
-  { CS_CNS11643_1992_5, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-5"     },
-  { CS_CNS11643_1992_6, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-6"     },
-  { CS_CNS11643_1992_7, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-7"     },
-  { CS_CNS11643_1992_F, "-*-*-*-*-*-*-*-*-*-*-c-*-cns11643*-f"     },
-#endif
-
-#if ENCODING_KR
-  { CS_KSC5601_1987_0,  "-baekmuk-gulim-*-*-*-*-*-*-*-*-c-*-ksc5601*" },
-  { CS_KSC5601_1987_0,  "-*-*-*-*-*-*-*-*-*-*-c-*-ksc5601*"        },
-# if XFT
-  { CS_KSC5601_1987_0,  "xft:Baekmuk Gulim:antialias=false"        },
-  { CS_KSC5601_1987_0,  "xft::lang=ko:antialias=false"             },
-# endif
-#endif
-
-  //{ CS_UNICODE,      "-*-unifont-*-*-*-*-*-*-*-*-c-*-iso10646-1"   }, // this gem of a font has actual dotted circles within the combining character glyphs.
-#if XFT
-  { CS_UNICODE,      "xft:Bitstream Vera Sans Mono:antialias=false:autohint=true" },
-  { CS_UNICODE,      "xft:Courier New:antialias=false:autohint=true"              },
-  { CS_UNICODE,      "xft:Andale Mono:antialias=false:autohint=false"             },
-  { CS_UNICODE,      "xft:Arial Unicode MS:antialias=false:autohint=false"        },
-
-  // FreeMono is usually uglier than x fonts, so try after the others
-  { CS_UNICODE,      "xft:FreeMono:autohint=true"                  },
-#endif
-
-  // generic font fallback, put this last, as many iso10646 fonts have extents
-  // specified for all glyphs in the range they cover, but most are simply empty
-  //{ CS_UNICODE,      "-*-*-*-r-*-*-*-*-*-*-c-*-iso10646-1"         },
-  //{ CS_UNICODE,      "-*-*-*-r-*-*-*-*-*-*-m-*-iso10646-1"         },
-  { CS_UNKNOWN, 0 }
-};
+#define OVERLAP_OK(w,wcw,prop) true
+//#define MAX_OVERLAP_ROMAN  (8 + 2)	// max. character width in 8ths of the base width
+//#define MAX_OVERLAP_ITALIC (8 + 3)	// max. overlap for italic fonts
+//
+//#define OVERLAP_OK(w,wcw,prop) ((w) <= (			\
+//  (prop)->slant >= rxvt_fontprop::italic			\
+//    ? ((prop)->width * (wcw) * MAX_OVERLAP_ITALIC + 7) >> 3	\
+//    : ((prop)->width * (wcw) * MAX_OVERLAP_ROMAN  + 7) >> 3	\
+//  ))
 
 // these characters are used to guess the font height and width
 // pango uses a similar algorithm and doesn't trust the font either.
@@ -241,18 +131,6 @@ rxvt_font::clear_rect (rxvt_drawable &d, int x, int y, int w, int h, int color) 
 #if XFT
       Picture dst;
 
-# ifdef HAVE_BG_PIXMAP
-      if (term->bg_img
-          && !term->pix_colors[color].is_opaque ()
-          && ((dst = XftDrawPicture (d))))
-        {
-          XClearArea (disp, d, x, y, w, h, false);
-
-          Picture solid_color_pict = XftDrawSrcPicture (d, &term->pix_colors[color].c);
-          XRenderComposite (disp, PictOpOver, solid_color_pict, None, dst, 0, 0, 0, 0, x, y, w, h);
-        }
-      else
-# endif
         XftDrawRect (d, &term->pix_colors[color].c, x, y, w, h);
 
 #else
@@ -1412,56 +1290,6 @@ rxvt_font_xft::draw (rxvt_drawable &d, int x, int y,
         {
           rxvt_drawable &d2 = d.screen->scratch_drawable (w, h);
 
-#ifdef HAVE_BG_PIXMAP
-          Picture dst = 0; // the only assignment is done conditionally in the following if condition
-
-          if (term->bg_img
-              && (bg == Color_transparent || bg == Color_bg
-                  || (bg >= 0 && !term->pix_colors[bg].is_opaque () && ((dst = XftDrawPicture (d2))))))
-            {
-              int src_x = x, src_y = y;
-
-              if (term->bg_flags & rxvt_term::BG_IS_TRANSPARENT)
-                {
-                  src_x += term->window_vt_x;
-                  src_y += term->window_vt_y;
-                }
-
-              if (term->bg_img->w >= src_x + w
-                  && term->bg_img->h >= src_y + h)
-                {
-                  XCopyArea (disp, term->bg_img->pm, d2, gc,
-                             src_x, src_y, w, h, 0, 0);
-                }
-              else
-                {
-                  XGCValues gcv;
-
-                  gcv.fill_style  = FillTiled;
-                  gcv.tile        = term->bg_img->pm;
-                  gcv.ts_x_origin = -src_x;
-                  gcv.ts_y_origin = -src_y;
-
-                  XChangeGC (disp, gc,
-                             GCTile | GCTileStipXOrigin | GCTileStipYOrigin | GCFillStyle,
-                             &gcv);
-
-                  XFillRectangle (disp, d2, gc, 0, 0, w, h);
-
-                  gcv.fill_style = FillSolid;
-                  XChangeGC (disp, gc, GCFillStyle, &gcv);
-                }
-
-              if (dst)
-                {
-                  Picture solid_color_pict = XftDrawSrcPicture (d2, &term->pix_colors[bg].c);
-
-                  // dst can only be set when bg >= 0
-                  XRenderComposite (disp, PictOpOver, solid_color_pict, None, dst, 0, 0, 0, 0, 0, 0, w, h);
-                }
-            }
-          else
-#endif
             XftDrawRect (d2, &term->pix_colors[bg >= 0 ? bg : Color_bg].c, 0, 0, w, h);
 
           XftDrawGlyphSpec (d2, &term->pix_colors[fg].c, f, enc, ep - enc);
@@ -1508,8 +1336,6 @@ rxvt_fontset::clear ()
   free (fontdesc); fontdesc = 0;
 
   fonts.clear ();
-
-  fallback = fallback_fonts;
 }
 
 void
@@ -1698,17 +1524,17 @@ rxvt_fontset::find_font_idx (unicode_t unicode)
       if (!f->loaded)
         {
           if (FROM_UNICODE (f->cs, unicode) == NOCHAR)
-            goto next_font;
+            continue;
 
           if (!realize_font (i))
-            goto next_font;
+            continue;
 
           if (prop.ascent != rxvt_fontprop::unset)
             max_it (f->ascent, prop.ascent);
         }
 
       if (f->cs == CS_UNKNOWN)
-        goto next_font;
+        continue;
 
       bool careful;
       if (f->has_char (unicode, &prop, careful))
@@ -1716,64 +1542,6 @@ rxvt_fontset::find_font_idx (unicode_t unicode)
           i = (i << 1) | careful;
 
           goto found;
-        }
-
-    next_font:
-      if (i == fonts.size () - 1)
-        {
-          if (fallback->name)
-            {
-              // search through the fallback list
-              push_font (new_font (fallback->name, fallback->cs));
-              fallback++;
-            }
-          else
-            {
-              // try to find a new font.
-              // only xft currently supported, as there is no
-              // way to configure this and xft is easier to hack in,
-              // while x11 has more framework in place already.
-              // TODO: this is a real resource hog, xft takes ages(?)
-#if XFT && USE_SLOW_LOOKUP
-              // grab the first xft font that seems suitable
-              FcPattern *p = FcPatternCreate ();
-
-              FcCharSet *s = FcCharSetCreate ();
-              FcCharSetAddChar (s, unicode);
-              FcPatternAddCharSet (p, FC_CHARSET, s);
-              // charsets don't help that much, as xft might return
-              // a non-matching font even if a better font is available :/
-
-              x x x x TODO prop might have unset contents
-              FcPatternAddInteger (p, FC_PIXEL_SIZE, prop.height);
-              FcPatternAddInteger (p, FC_WEIGHT, prop.weight);
-              FcPatternAddInteger (p, FC_SLANT, prop.slant);
-              FcPatternAddBool    (p, FC_MINSPACE, 1);
-              //FcPatternAddBool    (p, FC_ANTIALIAS, 1);
-
-              XftResult result;
-              FcPattern *match = XftFontMatch (term->dpy, term->display->screen, p, &result);
-
-              FcPatternDestroy (p);
-
-              if (match)
-                {
-                  FcPatternDel (match, FC_CHARSET);
-                  char *font = (char *)FcNameUnparse (match);
-                  FcPatternDestroy (match);
-
-                  if (find_font (font) < 0)
-                    {
-                      char fontname[4096];
-                      snprintf (fontname, sizeof (fontname), "xft:%s", font);
-
-                      push_font (new_font (fontname, CS_UNICODE));
-                    }
-
-                  free (font);
-                }
-#endif
-            }
         }
     }
 

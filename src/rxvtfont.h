@@ -65,8 +65,6 @@ struct rxvt_font
   }
 };
 
-struct rxvt_fallback_font;
-
 struct rxvt_fontset
 {
   char *fontdesc;
@@ -106,7 +104,6 @@ private:
   rxvt_fontprop prop;
   bool force_prop;
   simplevec<rxvt_font *> fonts;
-  const rxvt_fallback_font *fallback;
 
   // this once was a "typedef xxx pagemap[256]
   // but c++ arrays are not normal types, and cannot be

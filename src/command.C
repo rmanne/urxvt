@@ -955,14 +955,6 @@ rxvt_term::flush ()
 {
   flush_ev.stop ();
 
-#ifdef HAVE_IMG
-  if (bg_flags & BG_NEEDS_REFRESH)
-    {
-      bg_flags &= ~BG_NEEDS_REFRESH;
-      scr_touch (false);
-    }
-#endif
-
   if (want_refresh)
     {
       if (SHOULD_INVOKE (HOOK_LINE_UPDATE))
@@ -1004,7 +996,6 @@ rxvt_term::flush ()
         }
 
       scr_refresh ();
-      scrollBar.show (1);
 #if USE_XIM
       im_send_spot ();
 #endif
@@ -1067,21 +1058,6 @@ rxvt_term::text_blink_cb (ev::timer &w, int revents)
   if (scr_refresh_rend (RS_Blink, RS_Blink))
     {
       hidden_text = !hidden_text;
-      want_refresh = 1;
-      refresh_check ();
-    }
-  else
-    w.stop ();
-}
-#endif
-
-#ifndef NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING
-void
-rxvt_term::cont_scroll_cb (ev::timer &w, int revents)
-{
-  if ((scrollBar.state == SB_STATE_UP || scrollBar.state == SB_STATE_DOWN)
-      && scr_page (scrollBar.state == SB_STATE_UP ? UP : DN, 1))
-    {
       want_refresh = 1;
       refresh_check ();
     }
@@ -1485,14 +1461,6 @@ rxvt_term::x_cb (XEvent &ev)
             bool want_position_change = SHOULD_INVOKE (HOOK_POSITION_CHANGE);
 
             bool moved = false;
-#ifdef HAVE_BG_PIXMAP
-            if (bg_window_position_sensitive ())
-              {
-                want_position_change = true;
-                if (bg_img == 0)
-                  moved = true;
-              }
-#endif
 
             if (want_position_change)
               {
@@ -1522,10 +1490,6 @@ rxvt_term::x_cb (XEvent &ev)
               }
             else
               {
-#ifdef HAVE_BG_PIXMAP
-                if (moved)
-                  update_background ();
-#endif
               }
 
             HOOK_INVOKE ((this, HOOK_CONFIGURE_NOTIFY, DT_XEVENT, &ev, DT_END));
@@ -1545,17 +1509,6 @@ rxvt_term::x_cb (XEvent &ev)
         break;
 
       case MapNotify:
-#ifdef HAVE_BG_PIXMAP
-        // This is needed at startup for the case of no window manager
-        // or a non-reparenting window manager and also because we
-        // defer bg image updates if the window is not mapped. The
-        // short delay is to optimize for multiple ConfigureNotify
-        // events at startup when the window manager reparents the
-        // window, so as to perform the computation after we have
-        // received all of them.
-        if (bg_img == 0)
-          update_background_ev.start (0.025);
-#endif
         mapped = 1;
 #ifdef TEXT_BLINK
         text_blink_ev.start ();
@@ -1600,12 +1553,6 @@ rxvt_term::x_cb (XEvent &ev)
               ;
             while (XCheckTypedWindowEvent (dpy, ev.xany.window, GraphicsExpose, &unused_event))
               ;
-
-            if (scrollBar.state && ev.xany.window == scrollBar.win)
-              {
-                scrollBar.state = SB_STATE_IDLE;
-                scrollBar.show (0);
-              }
           }
         break;
 
@@ -1701,22 +1648,6 @@ rxvt_term::x_cb (XEvent &ev)
 #endif
                   }
               }
-          }
-        else if (scrollBar.state == SB_STATE_MOTION && ev.xany.window == scrollBar.win)
-          {
-            while (XCheckTypedWindowEvent (dpy, scrollBar.win,
-                                           MotionNotify, &ev))
-              ;
-
-            XQueryPointer (dpy, scrollBar.win,
-                          &unused_root, &unused_child,
-                          &unused_root_x, &unused_root_y,
-                          &ev.xbutton.x, &ev.xbutton.y,
-                          &unused_mask);
-            scr_move_to (scrollBar.position (ev.xbutton.y) - csrO,
-                         scrollBar.size ());
-            want_refresh = 1;
-            scrollBar.show (1);
           }
         break;
     }
@@ -1874,13 +1805,6 @@ rxvt_term::rootwin_cb (XEvent &ev)
         if (ev.xproperty.atom == xa[XA_XROOTPMAP_ID]
             || ev.xproperty.atom == xa[XA_ESETROOT_PMAP_ID])
           {
-#if BG_IMAGE_FROM_ROOT
-            if (option (Opt_transparent))
-              {
-                rxvt_img::new_from_root (this)->replace (root_img);
-                update_background ();
-              }
-#endif
             HOOK_INVOKE ((this, HOOK_ROOTPMAP_CHANGE, DT_END));
           }
 
@@ -2006,135 +1930,6 @@ rxvt_term::button_press (XButtonEvent &ev)
       MEvent.time = ev.time;
       return;
     }
-
-  /*
-   * Scrollbar window processing of button press
-   */
-  if (scrollBar.state && ev.window == scrollBar.win)
-    {
-      page_dirn direction = NO_DIR;
-
-      if (scrollBar.upButton (ev.y))
-        direction = UP; /* up */
-      else if (scrollBar.dnButton (ev.y))
-        direction = DN;  /* down */
-
-      scrollBar.state = SB_STATE_IDLE;
-      /*
-       * Rxvt-style scrollbar:
-       * move up if mouse is above slider
-       * move dn if mouse is below slider
-       *
-       * XTerm-style scrollbar:
-       * Move display proportional to pointer location
-       * pointer near top -> scroll one line
-       * pointer near bot -> scroll full page
-       */
-#ifndef NO_SCROLLBAR_REPORT
-      if (reportmode)
-        {
-          /*
-           * Mouse report disabled scrollbar:
-           * arrow buttons - send up/down
-           * click on scrollbar - send pageup/down
-           */
-          if (direction == UP)
-            tt_printf ("\033[A");
-          else if (direction == DN)
-            tt_printf ("\033[B");
-          else
-            switch (ev.button)
-              {
-                case Button2:
-                  tt_printf ("\014");
-                  break;
-                case Button1:
-                  tt_printf ("\033[6~");
-                  break;
-                case Button3:
-                  tt_printf ("\033[5~");
-                  break;
-              }
-        }
-      else
-#endif /* NO_SCROLLBAR_REPORT */
-        {
-          if (direction != NO_DIR)
-            {
-#ifndef NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING
-              if (!cont_scroll_ev.is_active ())
-                cont_scroll_ev.start (SCROLLBAR_INITIAL_DELAY, SCROLLBAR_CONTINUOUS_DELAY);
-#endif
-              if (scr_page (direction, 1))
-                {
-                  if (direction == UP)
-                    scrollBar.state = SB_STATE_UP;
-                  else
-                    scrollBar.state = SB_STATE_DOWN;
-                }
-            }
-          else
-            switch (ev.button)
-              {
-                case Button2:
-                  switch (scrollBar.align)
-                    {
-                      case SB_ALIGN_TOP:
-                        csrO = 0;
-                        break;
-                      case SB_ALIGN_CENTRE:
-                        csrO = (scrollBar.bot - scrollBar.top) / 2;
-                        break;
-                      case SB_ALIGN_BOTTOM:
-                        csrO = scrollBar.bot - scrollBar.top;
-                        break;
-                    }
-
-                  if (scrollBar.style == SB_STYLE_XTERM
-                      || scrollBar.above_slider (ev.y)
-                      || scrollBar.below_slider (ev.y))
-                    scr_move_to (scrollBar.position (ev.y) - csrO, scrollBar.size ());
-
-                  scrollBar.state = SB_STATE_MOTION;
-                  break;
-
-                case Button1:
-                  if (scrollBar.align == SB_ALIGN_CENTRE)
-                    csrO = ev.y - scrollBar.top;
-                  /* FALLTHROUGH */
-
-                case Button3:
-                  if (scrollBar.style != SB_STYLE_XTERM)
-                    {
-                      if (scrollBar.above_slider (ev.y))
-# ifdef RXVT_SCROLL_FULL
-                        scr_page (UP, nrow - 1);
-# else
-                        scr_page (UP, nrow / 4);
-# endif
-                      else if (scrollBar.below_slider (ev.y))
-# ifdef RXVT_SCROLL_FULL
-                        scr_page (DN, nrow - 1);
-# else
-                        scr_page (DN, nrow / 4);
-# endif
-                      else
-                        scrollBar.state = SB_STATE_MOTION;
-                    }
-                  else
-                    {
-                      scr_page ((ev.button == Button1 ? DN : UP),
-                                (nrow
-                                 * scrollBar.position (ev.y)
-                                 / scrollBar.size ()));
-                    }
-
-                  break;
-              }
-        }
-
-      return;
-    }
 }
 
 void
@@ -2145,12 +1940,6 @@ rxvt_term::button_release (XButtonEvent &ev)
   csrO = 0;		/* reset csr Offset */
   if (!bypass_keystate)
     reportmode = !! (priv_modes & PrivMode_mouse_report);
-
-  if (scrollBar.state == SB_STATE_UP || scrollBar.state == SB_STATE_DOWN)
-    {
-      scrollBar.state = SB_STATE_IDLE;
-      scrollBar.show (0);
-    }
 
 #ifdef SELECTION_SCROLLING
   sel_scroll_ev.stop();
@@ -2241,7 +2030,6 @@ rxvt_term::button_release (XButtonEvent &ev)
 # endif
                 {
                   scr_page (dirn, lines);
-                  scrollBar.show (1);
                 }
             }
             break;
@@ -2769,7 +2557,6 @@ rxvt_term::process_escape_seq ()
       case 'c':
         mbstate.reset ();
         scr_poweron ();
-        scrollBar.show (1);
         break;
 
         /* 8.3.79: LOCKING-SHIFT TWO (see ISO2022) */
@@ -3477,74 +3264,6 @@ rxvt_term::process_xterm_seq (int op, char *str, char resp)
         process_color_seq (op, Color_border, str, resp);
         break;
 
-#if BG_IMAGE_FROM_ROOT
-      case URxvt_Color_tint:
-        process_color_seq (op, Color_tint, str, resp);
-        {
-          bool changed = false;
-
-          if (ISSET_PIXCOLOR (Color_tint))
-            changed = root_effects.set_tint (pix_colors_focused [Color_tint]);
-
-          if (changed)
-            update_background ();
-        }
-
-        break;
-#endif
-
-#if BG_IMAGE_FROM_FILE
-      case Rxvt_Pixmap:
-        if (!strcmp (str, "?"))
-          {
-            char str[256];
-            int h_scale = fimage.h_scale;
-            int v_scale = fimage.v_scale;
-            int h_align = fimage.h_align;
-            int v_align = fimage.v_align;
-
-            sprintf (str, "[%dx%d+%d+%d]",
-                     h_scale, v_scale,
-                     h_align, v_align);
-            process_xterm_seq (XTerm_title, str, CHAR_ST);
-          }
-        else
-          {
-            bool changed = false;
-
-            if (*str != ';')
-              {
-                try
-                  {
-                    fimage.set_file_geometry (this, str);
-                    changed = true;
-                  }
-                catch (const class rxvt_failure_exception &e)
-                  {
-                  }
-              }
-            else
-              {
-                str++;
-                if (fimage.set_geometry (str, true))
-                  changed = true;
-              }
-
-            if (changed)
-              {
-                if (bg_window_position_sensitive ())
-                  {
-                    int x, y;
-                    get_window_origin (x, y);
-                    parent_x = x;
-                    parent_y = y;
-                  }
-                update_background ();
-              }
-          }
-        break;
-#endif
-
       case XTerm_logfile:
         // TODO, when secure mode?
         break;
@@ -3691,9 +3410,6 @@ rxvt_term::process_terminal_mode (int mode, int priv ecb_unused, unsigned int na
                  // 18 end FF to printer after print screen
                  // 19 Print screen prints full screen/scroll region
                   { 25, PrivMode_VisibleCursor }, // DECTCEM cnorm/cvvis/civis
-#ifdef scrollBar_esc
-                  { scrollBar_esc, PrivMode_scrollBar },
-#endif
                   { 35, PrivMode_ShiftKeys },   // rxvt extension
                  // 38, tektronix mode          // DECTEK
                   { 40, PrivMode_132OK },
@@ -3799,13 +3515,6 @@ rxvt_term::process_terminal_mode (int mode, int priv ecb_unused, unsigned int na
               if (state)		/* orthogonal */
                 priv_modes &= ~(PrivMode_MouseX11|PrivMode_MouseBtnEvent|PrivMode_MouseAnyEvent);
               break;
-#ifdef scrollBar_esc
-            case scrollBar_esc:
-              scrollBar.map (state);
-              resize_all_windows (0, 0, 0);
-              scr_touch (true);
-              break;
-#endif
 #ifdef CURSOR_BLINK
             case 12:
               cursor_blink_reset ();

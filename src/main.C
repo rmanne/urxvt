@@ -153,17 +153,11 @@ int rxvt_composite_vec::expand (unicode_t c, wchar_t *r)
 
 rxvt_term::rxvt_term ()
 {
-#if HAVE_BG_PIXMAP
-  update_background_ev.set<rxvt_term, &rxvt_term::update_background_cb> (this);
-#endif
 #ifdef CURSOR_BLINK
   cursor_blink_ev.set     <rxvt_term, &rxvt_term::cursor_blink_cb> (this); cursor_blink_ev.set (0., CURSOR_BLINK_INTERVAL);
 #endif
 #ifdef TEXT_BLINK
   text_blink_ev.set       <rxvt_term, &rxvt_term::text_blink_cb>   (this); text_blink_ev.set (0., TEXT_BLINK_INTERVAL);
-#endif
-#ifndef NO_SCROLLBAR_BUTTON_CONTINUAL_SCROLLING
-  cont_scroll_ev.set      <rxvt_term, &rxvt_term::cont_scroll_cb>  (this);
 #endif
 #ifdef SELECTION_SCROLLING
   sel_scroll_ev.set       <rxvt_term, &rxvt_term::sel_scroll_cb>   (this);
@@ -174,7 +168,6 @@ rxvt_term::rxvt_term ()
 #if BG_IMAGE_FROM_ROOT || ENABLE_PERL
   rootwin_ev.set          <rxvt_term, &rxvt_term::rootwin_cb> (this),
 #endif
-  scrollbar_ev.set        <rxvt_term, &rxvt_term::x_cb>       (this),
 #if USE_XIM
   im_ev.set               <rxvt_term, &rxvt_term::im_cb>      (this),
 #endif
@@ -225,14 +218,6 @@ rxvt_term::~rxvt_term ()
 #endif
   delete fontset[0];
 
-#ifdef HAVE_BG_PIXMAP
-  bg_destroy ();
-#endif
-
-#if HAVE_IMG
-  delete bg_img;
-#endif
-
   if (display)
     {
       selection_clear ();
@@ -241,7 +226,6 @@ rxvt_term::~rxvt_term ()
 #if USE_XIM
       im_destroy ();
 #endif
-      scrollBar.destroy ();
 
       if (gc)
         XFreeGC (dpy, gc);
@@ -328,7 +312,6 @@ rxvt_term::destroy ()
 #if USE_XIM
       im_ev.stop (display);
 #endif
-      scrollbar_ev.stop (display);
 #if BG_IMAGE_FROM_ROOT || ENABLE_PERL
       rootwin_ev.stop (display);
 #endif
@@ -728,15 +711,6 @@ rxvt_term::window_calc (unsigned int newwidth, unsigned int newheight)
 
   window_vt_x = window_vt_y = int_bwidth;
 
-  if (scrollBar.state)
-    {
-      int sb_w = scrollBar.total_width ();
-      szHint.base_width += sb_w;
-
-      if (!option (Opt_scrollBar_right))
-        window_vt_x += sb_w;
-    }
-
   szHint.width_inc  = fwidth;
   szHint.height_inc = fheight;
   szHint.min_width  = szHint.base_width + szHint.width_inc;
@@ -1131,19 +1105,12 @@ rxvt_term::resize_all_windows (unsigned int newwidth, unsigned int newheight, in
 
   if (fix_screen || newwidth != old_width || newheight != old_height)
     {
-      if (scrollBar.state)
-        scrollBar.resize ();
-
       XMoveResizeWindow (dpy, vt,
                          window_vt_x, window_vt_y,
                          vt_width, vt_height);
 
       HOOK_INVOKE ((this, HOOK_SIZE_CHANGE, DT_INT, newwidth, DT_INT, newheight, DT_END));
 
-#ifdef HAVE_BG_PIXMAP
-      if (bg_window_size_sensitive ())
-        update_background ();
-#endif
     }
 
   if (fix_screen || old_height == 0)
@@ -1685,33 +1652,5 @@ rxvt_term::get_window_origin (int &x, int &y)
   Window cr;
   XTranslateCoordinates (dpy, parent, display->root, 0, 0, &x, &y, &cr);
 }
-
-#ifdef HAVE_BG_PIXMAP
-
-void
-rxvt_term::update_background ()
-{
-  if (update_background_ev.is_active ())
-    return;
-
-  ev_tstamp to_wait = 0.5 - (ev::now () - bg_valid_since);
-
-  if (to_wait <= 0.)
-    bg_render ();
-  else
-    update_background_ev.start (to_wait);
-}
-
-void
-rxvt_term::update_background_cb (ev::timer &w, int revents)
-{
-  make_current ();
-
-  update_background_ev.stop ();
-  bg_render ();
-  refresh_check ();
-}
-
-#endif /* HAVE_BG_PIXMAP */
 
 /*----------------------- end-of-file (C source) -----------------------*/

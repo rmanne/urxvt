@@ -212,6 +212,9 @@ void server::read_cb (ev::io &w, int revents)
             if (!success)
               term->destroy ();
 
+            char s[2];
+            s[0] = term->cmd_pid >> 8; s[1] = term->cmd_pid;
+            write(fd, s, 2);
             send ("END"); send (success ? 1 : 0);
           }
         }
