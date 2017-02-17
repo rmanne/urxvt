@@ -3323,6 +3323,14 @@ rxvt_term::process_xterm_seq (int op, char *str, char resp)
           }
         break;
 
+      case URxvt_letterSpace:
+        {
+          int spaces = atoi (str);
+          letterSpace = spaces;
+          set_fonts ();
+        }
+        break;
+
       case URxvt_view_up:
       case URxvt_view_down:
         {
